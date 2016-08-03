@@ -1,7 +1,7 @@
 # rio-rgbify
 Encode arbitrary bit depth rasters in psuedo base-256 as RGB
 
-[![Build Status](https://travis-ci.org/mapbox/rio-rgbify.svg)](https://travis-ci.org/mapbox/rio-rgbify)[![Coverage Status](https://coveralls.io/repos/github/mapbox/rio-rgbify/badge.svg)](https://coveralls.io/github/mapbox/rio-rgbify)
+[![Build Status](https://travis-ci.org/mapbox/rio-rgbify.svg)](https://travis-ci.org/mapbox/rio-rgbify)[![Coverage Status](https://coveralls.io/repos/github/mapbox/rio-rgbify/badge.svg?branch=its-a-setup)](https://coveralls.io/github/mapbox/rio-rgbify)
 
 ## CLI usage
 
