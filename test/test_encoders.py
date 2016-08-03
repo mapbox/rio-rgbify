@@ -1,7 +1,7 @@
+from __future__ import division
 from rio_rgbify.encoders import data_to_rgb, _decode, _range_check
 import numpy as np
 import pytest
-from __future__ import division
 
 
 def test_encode_data_roundtrip():

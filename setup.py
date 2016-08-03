@@ -20,7 +20,7 @@ def read(fname):
 
 setup(name='rio-rgbify',
       version=version,
-      description=u"Encoded arbitrary bit depth rasters in psuedo base-256 as RGB",
+      description=u"Encode arbitrary bit depth rasters in psuedo base-256 as RGB",
       long_description=long_description,
       classifiers=[],
       keywords='',
