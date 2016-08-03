@@ -1,4 +1,5 @@
 import numpy as np
+from __future__ import division
 
 def data_to_rgb(data, baseval, interval):
     data -= baseval
