@@ -1,0 +1,4 @@
+click
+rasterio
+rio-mucho>=0.2.1
+rio-color>=0.4

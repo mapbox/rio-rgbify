@@ -1,0 +1,38 @@
+language: python
+sudo: false
+cache:
+  directories:
+    - ~/.cache/pip
+env:
+  global:
+    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+addons:
+  apt:
+    packages:
+    - libgdal1h
+    - gdal-bin
+    - libgdal-dev
+    - libatlas-dev
+    - libatlas-base-dev
+    - gfortran
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+before_install:
+  - "pip install -U pip"
+  - "pip install wheel"
+install:
+  - "pip wheel numpy"
+  - "pip install --use-wheel numpy"
+  - "pip wheel -r requirements.txt"
+  - "pip install --use-wheel -r requirements.txt"
+  - "pip wheel -r requirements-dev.txt"
+  - "pip install --use-wheel -r requirements-dev.txt"
+  - "pip install -e .[test]"
+script:
+  - py.test --cov rio_toa --cov-report term-missing
+after_success:
+  - coveralls
+
