@@ -32,7 +32,7 @@ install:
   - "pip install --use-wheel -r requirements-dev.txt"
   - "pip install -e .[test]"
 script:
-  - py.test --cov rio_toa --cov-report term-missing
+  - py.test --cov rio_rgbify --cov-report term-missing
 after_success:
   - coveralls
 
