@@ -1,5 +1,4 @@
 from __future__ import with_statement
-from multiprocessing import Pool
 
 import traceback, itertools, sys, json, math, os
 
@@ -9,6 +8,7 @@ import rasterio
 import pyproj
 import numpy as np
 import sqlite3
+from multiprocessing import Pool
 from rasterio._io import virtual_file_to_buffer
 
 from rasterio import transform
@@ -165,10 +165,10 @@ class RGBTiler:
         else:
             self.pool = Pool(processes, _main_worker, (self.inpath, self.run_function, self.global_args))
 
+        tiles = _make_tiles(bbox, self.min_z, self.max_z)
 
         for tile, contents in self.pool.imap_unordered(self.run_function,
-                                                       _make_tiles(bbox, self.min_z, self.max_z)):
-
+                                                       tiles):
             x, y, z = tile
 
             # mbtiles use inverse y indexing
