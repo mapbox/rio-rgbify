@@ -11,6 +11,9 @@ import sqlite3
 from multiprocessing import Pool
 from rasterio._io import virtual_file_to_buffer
 
+from io import BytesIO
+from PIL import Image
+
 from rasterio import transform
 from rasterio.warp import reproject, RESAMPLING
 from rasterio.warp import transform as xform
@@ -44,6 +47,12 @@ def _tile_range(min_tile, max_tile):
 
     return itertools.product(range(min_x, max_x + 1), range(min_y, max_y + 1))
 
+def _webp_writer(data, _):
+    with BytesIO() as f:
+        im = Image.fromarray(np.rollaxis(data, 0, 3))
+        im.save(f, format='webp', lossless=True)
+
+        return f.getvalue()
 
 def _file_writer(data, dst_transform):
     kwargs = global_args['kwargs'].copy()
@@ -84,9 +93,9 @@ def _tile_worker(tile):
         dst_crs="init='epsg:3857'",
         resampling=RESAMPLING.bilinear)
 
-    out = data_to_rgb(out, -10000, 0.1)
+    out = data_to_rgb(out, global_args['base_val'], global_args['interval'])
 
-    return tile, _file_writer(out, toaffine)
+    return tile, global_args['writer_func'](out, toaffine)
 
 
 def _make_tiles(bbox, minz, maxz):
@@ -115,7 +124,16 @@ class RGBTiler:
         if not 'base_val' in kwargs:
             kwargs['base_val'] = 0
 
+        if not 'format' in kwargs:
+            writer_func = _file_writer
+        elif kwargs['format'].lower() == 'png':
+            writer_func = _file_writer
+        elif kwargs['format'].lower() == 'webp':
+            writer_func = _webp_writer
+        else:
+            raise ValueError('{0} is not a supported filetype!'.format(kwargs['format']))
 
+        # global kwargs not used if output  is webp
         self.global_args = {
             'kwargs':  {
                 'driver': 'PNG',
@@ -126,7 +144,8 @@ class RGBTiler:
                 'crs': 'EPSG:3857'
             },
             'base_val': kwargs['base_val'],
-            'interval': kwargs['interval']
+            'interval': kwargs['interval'],
+            'writer_func': writer_func
         }
 
     def __enter__(self):

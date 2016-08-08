@@ -24,12 +24,13 @@ def _rgb_worker(data, window, ij, g_args):
     help='Band to encode [DEFAULT=1]')
 @click.option('--max-z', type=int, default=None)
 @click.option('--min-z', type=int, default=None)
+@click.option('--format', type=click.Choice(['png', 'webp']), default='png')
 @click.option('--workers', '-j', type=int, default=4,
     help='Workers to run [DEFAULT=4]')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
 @creation_options
-def rgbify(ctx, src_path, dst_path, base_val, interval, bidx, max_z, min_z, workers, verbose, creation_options):
+def rgbify(ctx, src_path, dst_path, base_val, interval, bidx, max_z, min_z, format, workers, verbose, creation_options):
     if dst_path.split('.')[-1].lower() == 'tif':
         with rio.open(src_path) as src:
             meta = src.profile.copy()
@@ -53,6 +54,7 @@ def rgbify(ctx, src_path, dst_path, base_val, interval, bidx, max_z, min_z, work
             global_args=gargs) as rm:
 
             rm.run(workers)
+
     elif dst_path.split('.')[-1].lower() == 'mbtiles':
 
         if min_z == None or max_z == None:
@@ -64,6 +66,7 @@ def rgbify(ctx, src_path, dst_path, base_val, interval, bidx, max_z, min_z, work
         with RGBTiler(src_path, dst_path,
                       interval=interval,
                       base_val=base_val,
+                      format=format,
                       max_z=max_z, min_z=min_z) as tiler:
 
             tiler.run(workers)
