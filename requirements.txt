@@ -1,6 +1,5 @@
 click
 rasterio
-rio-mucho>=0.2.1
-pyproj
-mercantile
 Pillow
+rio-mucho>=0.2.1
+mercantile
