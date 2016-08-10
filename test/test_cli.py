@@ -92,3 +92,14 @@ def test_mbtiler_webp_lower_interval():
         assert result.exit_code == 0
 
         assert os.path.getsize(out_mbtiles) == 12288
+
+def test_mbtiler_webp_badzoom():
+    in_elev_src = 'test/fixtures/elev.tif'
+
+    with TestingDir() as tmpdir:
+        out_mbtiles = tmpdir.mkpath('output.mbtiles')
+        runner = CliRunner()
+
+        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 9, '--format', 'webp'])
+
+        assert result.exit_code == -1
