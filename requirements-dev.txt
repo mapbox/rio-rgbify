@@ -3,6 +3,7 @@ cligj
 coveralls>=0.4
 delocate
 enum34
+hypothesis
 numpy>=1.8.0
 snuggs>=1.2
 pytest
