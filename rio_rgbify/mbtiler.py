@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from __future__ import division
 
 import traceback, itertools, sys, json, math, os
 
@@ -42,30 +43,7 @@ def _main_worker(inpath, g_work_func, g_args):
         return
 
 
-def _tile_range(min_tile, max_tile):
-    """
-    Given a min and max tile, return an iterator of
-    all combinations of this tile range
-
-    Parameters
-    -----------
-    min_tile: list
-        [x, y, z] of minimun tile
-    max_tile:
-        [x, y, z] of minimun tile
-
-    Returns
-    --------
-    tiles: iterator
-        iterator of [x, y, z] tiles
-    """
-    min_x, min_y, _ = min_tile
-    max_x, max_y, _ = max_tile
-
-    return itertools.product(range(min_x, max_x + 1), range(min_y, max_y + 1))
-
-
-def _webp_writer(data, _):
+def _encode_as_webp(data, profile=None, affine=None):
     """
     Uses BytesIO + PIL to encode a (3, 512, 512)
     array into a webp bytearray.
@@ -88,7 +66,7 @@ def _webp_writer(data, _):
         return f.getvalue()
 
 
-def _file_writer(data, dst_transform):
+def _encode_as_png(data, profile, dst_transform):
     """
     Uses rasterio's virtual file system to encode a (3, 512, 512)
     array as a png-encoded bytearray.
@@ -105,10 +83,9 @@ def _file_writer(data, dst_transform):
     contents: bytearray
         png-encoded bytearray of the provided input data
     """
-    kwargs = global_args['kwargs'].copy()
-    kwargs['affine'] = dst_transform
+    profile['affine'] = dst_transform
 
-    with rasterio.open('/vsimem/tileimg', 'w', **kwargs) as dst:
+    with rasterio.open('/vsimem/tileimg', 'w', **profile) as dst:
         dst.write(data)
 
     contents = bytearray(virtual_file_to_buffer('/vsimem/tileimg'))
@@ -118,7 +95,7 @@ def _file_writer(data, dst_transform):
 
 def _tile_worker(tile):
     """
-    For each tile, and given an open rasterio sec, plus a`global_args` dictionary
+    For each tile, and given an open rasterio src, plus a`global_args` dictionary
     with attributes of `base_val`, `interval`, and a `writer_func`,
     warp a continous single band raster to a 512 x 512 mercator tile,
     then encode this tile into RGB.
@@ -152,7 +129,30 @@ def _tile_worker(tile):
 
     out = data_to_rgb(out, global_args['base_val'], global_args['interval'])
 
-    return tile, global_args['writer_func'](out, toaffine)
+    return tile, global_args['writer_func'](out, global_args['kwargs'].copy(), toaffine)
+
+
+def _tile_range(min_tile, max_tile):
+    """
+    Given a min and max tile, return an iterator of
+    all combinations of this tile range
+
+    Parameters
+    -----------
+    min_tile: list
+        [x, y, z] of minimun tile
+    max_tile:
+        [x, y, z] of minimun tile
+
+    Returns
+    --------
+    tiles: iterator
+        iterator of [x, y, z] tiles
+    """
+    min_x, min_y, _ = min_tile
+    max_x, max_y, _ = max_tile
+
+    return itertools.product(range(min_x, max_x + 1), range(min_y, max_y + 1))
 
 
 def _make_tiles(bbox, src_crs, minz, maxz):
@@ -177,7 +177,14 @@ def _make_tiles(bbox, src_crs, minz, maxz):
         generator of [x, y, z] tiles that intersect
         the provided bounding box
     '''
-    w, s, e, n = transform_bounds(*[src_crs, 'epsg:4326'] + bbox)
+    w, s, e, n = transform_bounds(*[src_crs, 'epsg:4326'] + bbox, densify_pts=0)
+
+    EPSILON = 1.0e-10
+
+    w += EPSILON
+    s += EPSILON
+    e -= EPSILON
+    n -= EPSILON
 
     for z in range(minz, maxz + 1):
         for x, y in _tile_range(
@@ -239,11 +246,11 @@ class RGBTiler:
             kwargs['base_val'] = 0
 
         if not 'format' in kwargs:
-            writer_func = _file_writer
+            writer_func = _encode_as_png
         elif kwargs['format'].lower() == 'png':
-            writer_func = _file_writer
+            writer_func = _encode_as_png
         elif kwargs['format'].lower() == 'webp':
-            writer_func = _webp_writer
+            writer_func = _encode_as_webp
         else:
             raise ValueError('{0} is not a supported filetype!'.format(kwargs['format']))
 
