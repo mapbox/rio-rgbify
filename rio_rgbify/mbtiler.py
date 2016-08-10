@@ -232,18 +232,12 @@ class RGBTiler:
     None
 
     '''
-    def __init__(self, inpath, outpath, min_z, max_z, **kwargs):
+    def __init__(self, inpath, outpath, min_z, max_z, interval=1, base_val=0, **kwargs):
         self.run_function = _tile_worker
         self.inpath = inpath
         self.outpath = outpath
         self.min_z = min_z
         self.max_z = max_z
-
-        if not 'interval' in kwargs:
-            kwargs['interval'] = 1
-
-        if not 'base_val' in kwargs:
-            kwargs['base_val'] = 0
 
         if not 'format' in kwargs:
             writer_func = _encode_as_png
@@ -264,8 +258,8 @@ class RGBTiler:
                 'count': 3,
                 'crs': 'EPSG:3857'
             },
-            'base_val': kwargs['base_val'],
-            'interval': kwargs['interval'],
+            'base_val': base_val,
+            'interval': interval,
             'writer_func': writer_func
         }
 

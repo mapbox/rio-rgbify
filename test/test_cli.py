@@ -64,3 +64,31 @@ def test_cli_fail_elev():
         result = runner.invoke(rgbify, [in_elev_src, out_rgb_src, '--interval', 0.00000001, '--base-val', -100])
 
         assert result.exit_code == -1
+
+
+def test_mbtiler_webp_higher_interval():
+    in_elev_src = 'test/fixtures/elev.tif'
+
+    with TestingDir() as tmpdir:
+        out_mbtiles = tmpdir.mkpath('output.mbtiles')
+        runner = CliRunner()
+
+        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--interval', 0.1, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
+
+        assert result.exit_code == 0
+
+        assert os.path.getsize(out_mbtiles) ==  16384
+
+
+def test_mbtiler_webp_lower_interval():
+    in_elev_src = 'test/fixtures/elev.tif'
+
+    with TestingDir() as tmpdir:
+        out_mbtiles = tmpdir.mkpath('output.mbtiles')
+        runner = CliRunner()
+
+        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
+
+        assert result.exit_code == 0
+
+        assert os.path.getsize(out_mbtiles) == 28672
