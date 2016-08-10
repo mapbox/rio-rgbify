@@ -77,7 +77,7 @@ def test_mbtiler_webp_higher_interval():
 
         assert result.exit_code == 0
 
-        assert os.path.getsize(out_mbtiles) ==  16384
+        assert os.path.getsize(out_mbtiles) == 16384
 
 
 def test_mbtiler_webp_lower_interval():
@@ -91,4 +91,4 @@ def test_mbtiler_webp_lower_interval():
 
         assert result.exit_code == 0
 
-        assert os.path.getsize(out_mbtiles) == 28672
+        assert os.path.getsize(out_mbtiles) == 12288
