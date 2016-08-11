@@ -83,7 +83,7 @@ def test_mbtiler_webp():
 
         assert result_coarser.exit_code == 0
 
-        assert os.path.getsize(out_mbtiles_finer) > os.path.getsize(out_mbtiles_coarser
+        assert os.path.getsize(out_mbtiles_finer) > os.path.getsize(out_mbtiles_coarser)
 
 
 def test_mbtiler_png():
