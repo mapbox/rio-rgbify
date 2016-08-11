@@ -3,12 +3,12 @@ import types
 
 from hypothesis import given
 import hypothesis.strategies as st
+import pytest
 
 import numpy as np
 from rasterio import Affine
-from rio_rgbify.mbtiler import (_encode_as_webp, _encode_as_png, _make_tiles, _tile_range)
+from rio_rgbify.mbtiler import (_encode_as_webp, _encode_as_png, _make_tiles, _tile_range, RGBTiler)
 
-import pytest
 
 @given(
     st.integers(
@@ -106,6 +106,7 @@ def test_webp_writer_fails_dtype():
     with pytest.raises(TypeError):
         _encode_as_webp(test_data)
 
+
 def test_png_writer_fails_dtype():
     test_data = np.zeros((3, 256, 256), dtype=np.float64)
 
@@ -113,3 +114,13 @@ def test_png_writer_fails_dtype():
         _encode_as_png(test_data)
 
 
+def test_RGBtiler_format_fails():
+    test_in = 'i/do/not/exist.tif'
+    test_out = 'nor/do/i.tif'
+    test_minz = 0
+    test_maxz = 1
+
+    with pytest.raises(ValueError):
+        with RGBTiler(test_in, test_out, test_minz, test_maxz,
+            format='poo') as rtiler:
+            pass

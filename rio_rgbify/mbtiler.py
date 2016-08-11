@@ -37,10 +37,7 @@ def _main_worker(inpath, g_work_func, g_args):
     work_func = g_work_func
     global_args = g_args
 
-    try:
-        src = rasterio.open(inpath)
-    except:
-        return
+    src = rasterio.open(inpath)
 
 
 def _encode_as_webp(data, profile=None, affine=None):
