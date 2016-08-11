@@ -42,7 +42,7 @@ def test_cli_good_elev():
         out_rgb_src = tmpdir.mkpath('rgb.tif')
 
         runner = CliRunner()
-        result = runner.invoke(rgbify, [in_elev_src, out_rgb_src, '--interval', 0.001, '--base-val', -100])
+        result = runner.invoke(rgbify, [in_elev_src, out_rgb_src, '--interval', 0.001, '--base-val', -100, '-j', 1])
 
         assert result.exit_code == 0
 
@@ -61,7 +61,7 @@ def test_cli_fail_elev():
         out_rgb_src = tmpdir.mkpath('rgb.tif')
 
         runner = CliRunner()
-        result = runner.invoke(rgbify, [in_elev_src, out_rgb_src, '--interval', 0.00000001, '--base-val', -100])
+        result = runner.invoke(rgbify, [in_elev_src, out_rgb_src, '--interval', 0.00000001, '--base-val', -100, '-j', 1])
 
         assert result.exit_code == -1
 
@@ -73,13 +73,13 @@ def test_mbtiler_webp():
         out_mbtiles_finer = tmpdir.mkpath('output-0-dot-1.mbtiles')
         runner = CliRunner()
 
-        result_finer = runner.invoke(rgbify, [in_elev_src, out_mbtiles_finer, '--interval', 0.1, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
+        result_finer = runner.invoke(rgbify, [in_elev_src, out_mbtiles_finer, '--interval', 0.1, '--min-z', 10, '--max-z', 11, '--format', 'webp', '-j', 1])
 
         assert result_finer.exit_code == 0
 
         out_mbtiles_coarser  = tmpdir.mkpath('output-1.mbtiles')
 
-        result_coarser = runner.invoke(rgbify, [in_elev_src, out_mbtiles_coarser, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
+        result_coarser = runner.invoke(rgbify, [in_elev_src, out_mbtiles_coarser, '--min-z', 10, '--max-z', 11, '--format', 'webp', '-j', 1])
 
         assert result_coarser.exit_code == 0
 
@@ -99,7 +99,7 @@ def test_mbtiler_png():
 
         out_mbtiles_coarser  = tmpdir.mkpath('output-1.mbtiles')
 
-        result_coarser = runner.invoke(rgbify, [in_elev_src, out_mbtiles_coarser, '--min-z', 10, '--max-z', 11, '--format', 'png'])
+        result_coarser = runner.invoke(rgbify, [in_elev_src, out_mbtiles_coarser, '--min-z', 10, '--max-z', 11, '--format', 'png', '-j', 1])
 
         assert result_coarser.exit_code == 0
 
@@ -113,6 +113,18 @@ def test_mbtiler_webp_badzoom():
         out_mbtiles = tmpdir.mkpath('output.mbtiles')
         runner = CliRunner()
 
-        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 9, '--format', 'webp'])
+        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 9, '--format', 'webp', '-j', 1])
+
+        assert result.exit_code == -1
+
+
+def test_bad_input_format():
+    in_elev_src = 'test/fixtures/elev.tif'
+
+    with TestingDir() as tmpdir:
+        out_mbtiles = tmpdir.mkpath('output.lol')
+        runner = CliRunner()
+
+        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 9, '--format', 'webp', '-j', 1])
 
         assert result.exit_code == -1
