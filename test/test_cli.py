@@ -66,32 +66,45 @@ def test_cli_fail_elev():
         assert result.exit_code == -1
 
 
-def test_mbtiler_webp_higher_interval():
+def test_mbtiler_webp():
     in_elev_src = 'test/fixtures/elev.tif'
 
     with TestingDir() as tmpdir:
-        out_mbtiles = tmpdir.mkpath('output.mbtiles')
+        out_mbtiles_finer = tmpdir.mkpath('output-0-dot-1.mbtiles')
         runner = CliRunner()
 
-        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--interval', 0.1, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
+        result_finer = runner.invoke(rgbify, [in_elev_src, out_mbtiles_finer, '--interval', 0.1, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
 
-        assert result.exit_code == 0
+        assert result_finer.exit_code == 0
 
-        assert os.path.getsize(out_mbtiles) == 16384
+        out_mbtiles_coarser  = tmpdir.mkpath('output-1.mbtiles')
+
+        result_coarser = runner.invoke(rgbify, [in_elev_src, out_mbtiles_coarser, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
+
+        assert result_coarser.exit_code == 0
+
+        assert os.path.getsize(out_mbtiles_finer) > os.path.getsize(out_mbtiles_coarser
 
 
-def test_mbtiler_webp_lower_interval():
+def test_mbtiler_png():
     in_elev_src = 'test/fixtures/elev.tif'
 
     with TestingDir() as tmpdir:
-        out_mbtiles = tmpdir.mkpath('output.mbtiles')
+        out_mbtiles_finer = tmpdir.mkpath('output-0-dot-1.mbtiles')
         runner = CliRunner()
 
-        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 11, '--format', 'webp'])
+        result_finer = runner.invoke(rgbify, [in_elev_src, out_mbtiles_finer, '--interval', 0.1, '--min-z', 10, '--max-z', 11, '--format', 'png'])
 
-        assert result.exit_code == 0
+        assert result_finer.exit_code == 0
 
-        assert os.path.getsize(out_mbtiles) == 12288
+        out_mbtiles_coarser  = tmpdir.mkpath('output-1.mbtiles')
+
+        result_coarser = runner.invoke(rgbify, [in_elev_src, out_mbtiles_coarser, '--min-z', 10, '--max-z', 11, '--format', 'png'])
+
+        assert result_coarser.exit_code == 0
+
+        assert os.path.getsize(out_mbtiles_finer) > os.path.getsize(out_mbtiles_coarser)
+
 
 def test_mbtiler_webp_badzoom():
     in_elev_src = 'test/fixtures/elev.tif'
