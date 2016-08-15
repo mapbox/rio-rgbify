@@ -228,18 +228,21 @@ class RGBTiler:
     format: str
         output tile image format (png or webp)
         Default=png
+    bounding_tile: list
+        [x, y, z] of bounding tile; limits tiled output to this extent
 
     Returns
     --------
     None
 
     '''
-    def __init__(self, inpath, outpath, min_z, max_z, interval=1, base_val=0, **kwargs):
+    def __init__(self, inpath, outpath, min_z, max_z, interval=1, base_val=0, bounding_tile=None, **kwargs):
         self.run_function = _tile_worker
         self.inpath = inpath
         self.outpath = outpath
         self.min_z = min_z
         self.max_z = max_z
+        self.bounding_tile = bounding_tile
 
         if not 'format' in kwargs:
             writer_func = _encode_as_png
@@ -282,6 +285,7 @@ class RGBTiler:
             bbox = list(src.bounds)
             src_crs = src.crs
 
+
         # remove the output filepath if it exists
         if os.path.exists(self.outpath):
             os.unlink(self.outpath)
@@ -308,7 +312,11 @@ class RGBTiler:
             self.pool = Pool(processes, _main_worker, (self.inpath, self.run_function, self.global_args))
 
         # generator of tiles to make
-        tiles = _make_tiles(bbox, src_crs, self.min_z, self.max_z)
+        if self.bounding_tile is None:
+            tiles = _make_tiles(bbox, src_crs, self.min_z, self.max_z)
+        else:
+            constrained_bbox = list(mercantile.bounds(self.bounding_tile))
+            tiles = _make_tiles(constrained_bbox, 'epsg:4326', self.min_z, self.max_z)
 
 
         for tile, contents in self.pool.imap_unordered(self.run_function,

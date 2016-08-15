@@ -105,6 +105,25 @@ def test_mbtiler_png():
 
         assert os.path.getsize(out_mbtiles_finer) > os.path.getsize(out_mbtiles_coarser)
 
+def test_mbtiler_png_bounding_tile():
+    in_elev_src = 'test/fixtures/elev.tif'
+
+    with TestingDir() as tmpdir:
+        out_mbtiles_not_limited = tmpdir.mkpath('output-not-limited.mbtiles')
+        runner = CliRunner()
+
+        result_not_limited = runner.invoke(rgbify, [in_elev_src, out_mbtiles_not_limited, '--min-z', 12, '--max-z', 12, '--format', 'png'])
+
+        assert result_not_limited.exit_code == 0
+
+        out_mbtiles_limited  = tmpdir.mkpath('output-limited.mbtiles')
+
+        result_limited = runner.invoke(rgbify, [in_elev_src, out_mbtiles_limited, '--min-z', 12, '--max-z', 12, '--format', 'png', '--bounding-tile', '[654, 1582, 12]'])
+
+        assert result_limited.exit_code == 0
+
+        assert os.path.getsize(out_mbtiles_not_limited) > os.path.getsize(out_mbtiles_limited)
+
 
 def test_mbtiler_webp_badzoom():
     in_elev_src = 'test/fixtures/elev.tif'
@@ -114,6 +133,28 @@ def test_mbtiler_webp_badzoom():
         runner = CliRunner()
 
         result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 9, '--format', 'webp', '-j', 1])
+
+        assert result.exit_code == -1
+
+def test_mbtiler_webp_badboundingtile():
+    in_elev_src = 'test/fixtures/elev.tif'
+
+    with TestingDir() as tmpdir:
+        out_mbtiles = tmpdir.mkpath('output.mbtiles')
+        runner = CliRunner()
+
+        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 9, '--format', 'webp', '--bounding-tile', '654, 1582, 12'])
+
+        assert result.exit_code == -1
+
+def test_mbtiler_webp_badboundingtile_values():
+    in_elev_src = 'test/fixtures/elev.tif'
+
+    with TestingDir() as tmpdir:
+        out_mbtiles = tmpdir.mkpath('output.mbtiles')
+        runner = CliRunner()
+
+        result = runner.invoke(rgbify, [in_elev_src, out_mbtiles, '--min-z', 10, '--max-z', 9, '--format', 'webp', '--bounding-tile', '[654, 1582]'])
 
         assert result.exit_code == -1
 
