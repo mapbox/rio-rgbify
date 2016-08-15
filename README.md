@@ -17,7 +17,13 @@ cd rio-rgbify
 
 pip install -e '.[test]'
 
+```
+
 ## CLI usage
+
+- Input can be any raster readable by `rasterio`
+- Output can be any raster format writable by `rasterio` OR
+- To create tiles _directly_ from data (recommended), output to an `.mbtiles`
 
 ```
 Usage: rio rgbify [OPTIONS] SRC_PATH DST_PATH
