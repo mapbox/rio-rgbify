@@ -35,6 +35,8 @@ Options:
                          incrementing interval [DEFAULT=1]
   --bidx INTEGER         Band to encode [DEFAULT=1]
   --max-z INTEGER        Maximum zoom to tile (.mbtiles output only)
+  --bounding-tile TEXT   Bounding tile '[{x}, {y}, {z}]' to limit output tiles
+                         (.mbtiles output only)
   --min-z INTEGER        Minimum zoom to tile (.mbtiles output only)
   --format [png|webp]    Output tile format (.mbtiles output only)
   -j, --workers INTEGER  Workers to run [DEFAULT=4]
