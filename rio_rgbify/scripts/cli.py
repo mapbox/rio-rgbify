@@ -19,12 +19,15 @@ def _rgb_worker(data, window, ij, g_args):
 @click.option('--base-val', '-b', type=float, default=0,
     help='The base value of which to base the output encoding on [DEFAULT=0]')
 @click.option('--interval', '-i', type=float, default=1,
-    help='Describes the precision of the output,by incrementing interval [DEFAULT=1]')
+    help='Describes the precision of the output, by incrementing interval [DEFAULT=1]')
 @click.option('--bidx', type=int, default=1,
     help='Band to encode [DEFAULT=1]')
-@click.option('--max-z', type=int, default=None)
-@click.option('--min-z', type=int, default=None)
-@click.option('--format', type=click.Choice(['png', 'webp']), default='png')
+@click.option('--max-z', type=int, default=None,
+    help="Maximum zoom to tile (.mbtiles output only)")
+@click.option('--min-z', type=int, default=None,
+    help="Minimum zoom to tile (.mbtiles output only)")
+@click.option('--format', type=click.Choice(['png', 'webp']), default='png',
+    help="Output tile format (.mbtiles output only)")
 @click.option('--workers', '-j', type=int, default=4,
     help='Workers to run [DEFAULT=4]')
 @click.option('--verbose', '-v', is_flag=True, default=False)

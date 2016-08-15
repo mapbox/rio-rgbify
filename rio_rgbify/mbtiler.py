@@ -49,7 +49,10 @@ def _encode_as_webp(data, profile=None, affine=None):
     -----------
     data: ndarray
         (3 x 512 x 512) uint8 RGB array
-    _: empty
+    profile: None
+        ignored
+    affine: None
+        ignored
 
     Returns
     --------
@@ -72,7 +75,9 @@ def _encode_as_png(data, profile, dst_transform):
     -----------
     data: ndarray
         (3 x 512 x 512) uint8 RGB array
-    dst_transform: affine
+    profile: dictionary
+        dictionary of kwargs for png writing
+    affine: Affine
         affine transform for output tile
 
     Returns
@@ -304,6 +309,7 @@ class RGBTiler:
 
         # generator of tiles to make
         tiles = _make_tiles(bbox, src_crs, self.min_z, self.max_z)
+
 
         for tile, contents in self.pool.imap_unordered(self.run_function,
                                                        tiles):
