@@ -31,9 +31,9 @@ setup(name='rio-rgbify',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
-      install_requires=["click", "rasterio", "rio-mucho"],
+      install_requires=["click", "rasterio", "rio-mucho", 'Pillow', 'mercantile'],
       extras_require={
-          'test': ['pytest', 'pytest-cov', 'codecov']},
+          'test': ['pytest', 'pytest-cov', 'codecov', 'hypothesis', 'raster_tester']},
       entry_points="""
       [rasterio.rio_plugins]
       toa=rio_rgbify.scripts.cli:rgbify
