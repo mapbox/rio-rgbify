@@ -3,7 +3,6 @@ from __future__ import division
 
 import traceback, itertools, sys, json, math, os
 
-import click
 import mercantile
 import rasterio
 import numpy as np
@@ -16,12 +15,16 @@ from io import BytesIO
 from PIL import Image
 
 from rasterio import transform
-from rasterio.warp import reproject, RESAMPLING, transform_bounds
+from rasterio.warp import reproject, transform_bounds
+try:
+    from rasterio.warp import RESAMPLING
+except ImportError:
+    from rasterio.enums import Resampling as RESAMPLING
 
 from rio_rgbify.encoders import data_to_rgb
 
 buffer = bytes if sys.version_info > (3,) else buffer
- 
+
 work_func = None
 global_args = None
 src = None
