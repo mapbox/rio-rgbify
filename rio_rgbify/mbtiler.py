@@ -249,10 +249,13 @@ class RGBTiler:
 
         if not 'format' in kwargs:
             writer_func = _encode_as_png
+            self.image_format = 'png'
         elif kwargs['format'].lower() == 'png':
             writer_func = _encode_as_png
+            self.image_format = 'png'
         elif kwargs['format'].lower() == 'webp':
             writer_func = _encode_as_webp
+            self.image_format = 'webp'
         else:
             raise ValueError('{0} is not a supported filetype!'.format(kwargs['format']))
 
@@ -305,6 +308,32 @@ class RGBTiler:
         # create empty metadata
         cur.execute(
             "CREATE TABLE metadata (name text, value text);")
+
+        conn.commit()
+
+        # populate metadata with required fields
+        cur.execute(
+            "INSERT INTO metadata "
+            "(name, value) "
+            "VALUES ('format', ?);",
+            (self.image_format, ))
+
+        cur.execute(
+            "INSERT INTO metadata "
+            "(name, value) "
+            "VALUES ('name', '');")
+        cur.execute(
+            "INSERT INTO metadata "
+            "(name, value) "
+            "VALUES ('description', '');")
+        cur.execute(
+            "INSERT INTO metadata "
+            "(name, value) "
+            "VALUES ('version', '1');")
+        cur.execute(
+            "INSERT INTO metadata "
+            "(name, value) "
+            "VALUES ('type', 'baselayer');")
 
         conn.commit()
 
