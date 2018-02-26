@@ -129,7 +129,7 @@ def _tile_worker(tile):
     reproject(
         rasterio.band(src, 1), out,
         dst_transform=toaffine,
-        dst_crs="init='epsg:3857'",
+        dst_crs='epsg:3857',
         resampling=RESAMPLING.bilinear)
 
     out = data_to_rgb(out, global_args['base_val'], global_args['interval'])
