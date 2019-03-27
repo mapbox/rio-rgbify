@@ -1,7 +1,7 @@
+"""rio-rgbify: setup."""
+
 import os
-import sys
 from setuptools import setup, find_packages
-from setuptools.extension import Extension
 
 # Parse the version from the fiona module.
 with open('rio_rgbify/__init__.py') as f:
@@ -17,6 +17,7 @@ long_description = """"""
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 setup(name='rio-rgbify',
       version=version,
@@ -36,6 +37,5 @@ setup(name='rio-rgbify',
           'test': ['pytest', 'pytest-cov', 'codecov', 'hypothesis', 'raster_tester']},
       entry_points="""
       [rasterio.rio_plugins]
-      toa=rio_rgbify.scripts.cli:rgbify
-      """
-      )
+      rgbify=rio_rgbify.scripts.cli:rgbify
+      """)

@@ -60,7 +60,7 @@ def test_webp_writer():
 
     test_bytearray = _encode_as_webp(test_data)
 
-    assert len(test_bytearray) == 42
+    assert len(test_bytearray) == 34
 
     test_complex_data = test_data.copy()
 
