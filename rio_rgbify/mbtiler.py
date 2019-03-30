@@ -1,7 +1,11 @@
 from __future__ import with_statement
 from __future__ import division
 
-import traceback, itertools, sys, json, math, os
+import os
+import sys
+import math
+import traceback
+import itertools
 
 import mercantile
 import rasterio
@@ -16,10 +20,8 @@ from PIL import Image
 
 from rasterio import transform
 from rasterio.warp import reproject, transform_bounds
-try:
-    from rasterio.warp import RESAMPLING
-except ImportError:
-    from rasterio.enums import Resampling as RESAMPLING
+
+from rasterio.enums import Resampling
 
 from rio_rgbify.encoders import data_to_rgb
 
@@ -64,7 +66,7 @@ def _encode_as_webp(data, profile=None, affine=None):
     """
     with BytesIO() as f:
         im = Image.fromarray(np.rollaxis(data, 0, 3))
-        im.save(f, format='webp', lossless=True)
+        im.save(f, format="webp", lossless=True)
 
         return f.getvalue()
 
@@ -88,12 +90,12 @@ def _encode_as_png(data, profile, dst_transform):
     contents: bytearray
         png-encoded bytearray of the provided input data
     """
-    profile['affine'] = dst_transform
+    profile["affine"] = dst_transform
 
-    with rasterio.open('/vsimem/tileimg', 'w', **profile) as dst:
+    with rasterio.open("/vsimem/tileimg", "w", **profile) as dst:
         dst.write(data)
 
-    contents = bytearray(virtual_file_to_buffer('/vsimem/tileimg'))
+    contents = bytearray(virtual_file_to_buffer("/vsimem/tileimg"))
 
     return contents
 
@@ -119,22 +121,30 @@ def _tile_worker(tile):
     """
     x, y, z = tile
 
-    bounds = [c for i in (mercantile.xy(*mercantile.ul(x, y + 1, z)),
-            mercantile.xy(*mercantile.ul(x + 1, y, z))) for c in i]
+    bounds = [
+        c
+        for i in (
+            mercantile.xy(*mercantile.ul(x, y + 1, z)),
+            mercantile.xy(*mercantile.ul(x + 1, y, z)),
+        )
+        for c in i
+    ]
 
     toaffine = transform.from_bounds(*bounds + [512, 512])
 
-    out = np.empty((512, 512), dtype=src.meta['dtype'])
+    out = np.empty((512, 512), dtype=src.meta["dtype"])
 
     reproject(
-        rasterio.band(src, 1), out,
+        rasterio.band(src, 1),
+        out,
         dst_transform=toaffine,
         dst_crs="epsg:3857",
-        resampling=RESAMPLING.bilinear)
+        resampling=Resampling.bilinear,
+    )
 
-    out = data_to_rgb(out, global_args['base_val'], global_args['interval'])
+    out = data_to_rgb(out, global_args["base_val"], global_args["interval"])
 
-    return tile, global_args['writer_func'](out, global_args['kwargs'].copy(), toaffine)
+    return tile, global_args["writer_func"](out, global_args["kwargs"].copy(), toaffine)
 
 
 def _tile_range(min_tile, max_tile):
@@ -161,7 +171,7 @@ def _tile_range(min_tile, max_tile):
 
 
 def _make_tiles(bbox, src_crs, minz, maxz):
-    '''
+    """
     Given a bounding box, zoom range, and source crs,
     find all tiles that would intersect
 
@@ -181,8 +191,8 @@ def _make_tiles(bbox, src_crs, minz, maxz):
     tiles: generator
         generator of [x, y, z] tiles that intersect
         the provided bounding box
-    '''
-    w, s, e, n = transform_bounds(*[src_crs, 'epsg:4326'] + bbox, densify_pts=0)
+    """
+    w, s, e, n = transform_bounds(*[src_crs, "epsg:4326"] + bbox, densify_pts=0)
 
     EPSILON = 1.0e-10
 
@@ -192,15 +202,12 @@ def _make_tiles(bbox, src_crs, minz, maxz):
     n -= EPSILON
 
     for z in range(minz, maxz + 1):
-        for x, y in _tile_range(
-            mercantile.tile(w, n, z),
-            mercantile.tile(e, s, z)):
-
+        for x, y in _tile_range(mercantile.tile(w, n, z), mercantile.tile(e, s, z)):
             yield [x, y, z]
 
 
 class RGBTiler:
-    '''
+    """
     Takes continous source data of an arbitrary bit depth and encodes it
     in parallel into RGB tiles in an MBTiles file. Provided with a context manager:
     ```
@@ -238,8 +245,19 @@ class RGBTiler:
     --------
     None
 
-    '''
-    def __init__(self, inpath, outpath, min_z, max_z, interval=1, base_val=0, bounding_tile=None, **kwargs):
+    """
+
+    def __init__(
+        self,
+        inpath,
+        outpath,
+        min_z,
+        max_z,
+        interval=1,
+        base_val=0,
+        bounding_tile=None,
+        **kwargs
+    ):
         self.run_function = _tile_worker
         self.inpath = inpath
         self.outpath = outpath
@@ -247,50 +265,51 @@ class RGBTiler:
         self.max_z = max_z
         self.bounding_tile = bounding_tile
 
-        if not 'format' in kwargs:
+        if not "format" in kwargs:
             writer_func = _encode_as_png
-            self.image_format = 'png'
-        elif kwargs['format'].lower() == 'png':
+            self.image_format = "png"
+        elif kwargs["format"].lower() == "png":
             writer_func = _encode_as_png
-            self.image_format = 'png'
-        elif kwargs['format'].lower() == 'webp':
+            self.image_format = "png"
+        elif kwargs["format"].lower() == "webp":
             writer_func = _encode_as_webp
-            self.image_format = 'webp'
+            self.image_format = "webp"
         else:
-            raise ValueError('{0} is not a supported filetype!'.format(kwargs['format']))
+            raise ValueError(
+                "{0} is not a supported filetype!".format(kwargs["format"])
+            )
 
         # global kwargs not used if output  is webp
         self.global_args = {
-            'kwargs':  {
-                'driver': 'PNG',
-                'dtype': 'uint8',
-                'height': 512,
-                'width': 512,
-                'count': 3,
-                'crs': 'EPSG:3857'
+            "kwargs": {
+                "driver": "PNG",
+                "dtype": "uint8",
+                "height": 512,
+                "width": 512,
+                "count": 3,
+                "crs": "EPSG:3857",
             },
-            'base_val': base_val,
-            'interval': interval,
-            'writer_func': writer_func
+            "base_val": base_val,
+            "interval": interval,
+            "writer_func": writer_func,
         }
 
     def __enter__(self):
         return self
+
     def __exit__(self, ext_t, ext_v, trace):
         if ext_t:
             traceback.print_exc()
 
-
     def run(self, processes=4):
-        '''
+        """
         Warp, encode, and tile
-        '''
+        """
 
         # get the bounding box + crs of the file to tile
         with rasterio.open(self.inpath) as src:
             bbox = list(src.bounds)
             src_crs = src.crs
-
 
         # remove the output filepath if it exists
         if os.path.exists(self.outpath):
@@ -304,55 +323,50 @@ class RGBTiler:
         cur.execute(
             "CREATE TABLE tiles "
             "(zoom_level integer, tile_column integer, "
-            "tile_row integer, tile_data blob);")
+            "tile_row integer, tile_data blob);"
+        )
         # create empty metadata
-        cur.execute(
-            "CREATE TABLE metadata (name text, value text);")
+        cur.execute("CREATE TABLE metadata (name text, value text);")
 
         conn.commit()
 
         # populate metadata with required fields
         cur.execute(
-            "INSERT INTO metadata "
-            "(name, value) "
-            "VALUES ('format', ?);",
-            (self.image_format, ))
+            "INSERT INTO metadata " "(name, value) " "VALUES ('format', ?);",
+            (self.image_format,),
+        )
 
+        cur.execute("INSERT INTO metadata " "(name, value) " "VALUES ('name', '');")
         cur.execute(
-            "INSERT INTO metadata "
-            "(name, value) "
-            "VALUES ('name', '');")
+            "INSERT INTO metadata " "(name, value) " "VALUES ('description', '');"
+        )
+        cur.execute("INSERT INTO metadata " "(name, value) " "VALUES ('version', '1');")
         cur.execute(
-            "INSERT INTO metadata "
-            "(name, value) "
-            "VALUES ('description', '');")
-        cur.execute(
-            "INSERT INTO metadata "
-            "(name, value) "
-            "VALUES ('version', '1');")
-        cur.execute(
-            "INSERT INTO metadata "
-            "(name, value) "
-            "VALUES ('type', 'baselayer');")
+            "INSERT INTO metadata " "(name, value) " "VALUES ('type', 'baselayer');"
+        )
 
         conn.commit()
 
         if processes == 1:
             # use mock pool for profiling / debugging
-            self.pool = MockTub(_main_worker, (self.inpath, self.run_function, self.global_args))
+            self.pool = MockTub(
+                _main_worker, (self.inpath, self.run_function, self.global_args)
+            )
         else:
-            self.pool = Pool(processes, _main_worker, (self.inpath, self.run_function, self.global_args))
+            self.pool = Pool(
+                processes,
+                _main_worker,
+                (self.inpath, self.run_function, self.global_args),
+            )
 
         # generator of tiles to make
         if self.bounding_tile is None:
             tiles = _make_tiles(bbox, src_crs, self.min_z, self.max_z)
         else:
             constrained_bbox = list(mercantile.bounds(self.bounding_tile))
-            tiles = _make_tiles(constrained_bbox, 'epsg:4326', self.min_z, self.max_z)
+            tiles = _make_tiles(constrained_bbox, "epsg:4326", self.min_z, self.max_z)
 
-
-        for tile, contents in self.pool.imap_unordered(self.run_function,
-                                                       tiles):
+        for tile, contents in self.pool.imap_unordered(self.run_function, tiles):
             x, y, z = tile
 
             # mbtiles use inverse y indexing
@@ -363,7 +377,8 @@ class RGBTiler:
                 "INSERT INTO tiles "
                 "(zoom_level, tile_column, tile_row, tile_data) "
                 "VALUES (?, ?, ?, ?);",
-                (z, x, tiley, buffer(contents)))
+                (z, x, tiley, buffer(contents)),
+            )
 
             conn.commit()
 
