@@ -1,3 +1,5 @@
+"""rio_rgbify CLI."""
+
 import click
 
 import rasterio as rio
@@ -77,6 +79,7 @@ def rgbify(
     verbose,
     creation_options,
 ):
+    """rio-rgbify cli."""
     if dst_path.split(".")[-1].lower() == "tif":
         with rio.open(src_path) as src:
             meta = src.profile.copy()
@@ -95,7 +98,7 @@ def rgbify(
             rm.run(workers)
 
     elif dst_path.split(".")[-1].lower() == "mbtiles":
-        if min_z == None or max_z == None:
+        if min_z is None or max_z is None:
             raise ValueError("Zoom range must be provided for mbtile output")
 
         if max_z < min_z:
@@ -106,7 +109,7 @@ def rgbify(
         if bounding_tile is not None:
             try:
                 bounding_tile = json.loads(bounding_tile)
-            except:
+            except Exception:
                 raise TypeError(
                     "Bounding tile of {0} is not valid".format(bounding_tile)
                 )
@@ -121,7 +124,6 @@ def rgbify(
             max_z=max_z,
             min_z=min_z,
         ) as tiler:
-
             tiler.run(workers)
 
     else:
