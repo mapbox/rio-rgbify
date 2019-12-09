@@ -1,5 +1,5 @@
 click
-rasterio
+rasterio~=1.0
 Pillow
 rio-mucho>=0.2.1
 mercantile

@@ -3,36 +3,30 @@ sudo: false
 cache:
   directories:
     - ~/.cache/pip
-env:
-  global:
-    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
-    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
-addons:
-  apt:
-    packages:
-    - libgdal1h
-    - gdal-bin
-    - libgdal-dev
-    - libatlas-dev
-    - libatlas-base-dev
-    - gfortran
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-before_install:
-  - "pip install -U pip"
-  - "pip install wheel"
-install:
-  - "pip wheel numpy"
-  - "pip install --use-wheel numpy"
-  - "pip wheel -r requirements.txt"
-  - "pip install --use-wheel -r requirements.txt"
-  - "pip wheel -r requirements-dev.txt"
-  - "pip install --use-wheel -r requirements-dev.txt"
-  - "pip install -e .[test]"
-script:
-  - py.test --cov rio_rgbify --cov-report term-missing
-after_success:
-  - coveralls
 
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=py27
+    - python: 3.6
+      env: TOXENV=py36
+    - python: 3.7
+     env: TOXENV=py37
+
+before_install:
+  - python -m pip install -U pip
+install:
+  - python -m pip install codecov pre-commit tox
+script:
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then pre-commit run --all-files; fi
+  - tox
+after_success:
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then coverage xml; codecov; fi
+# deploy:
+#   on:
+#     repo: mapbox/rio-rgbify
+#     python: 3.6
+#     tags: true
+#   provider: pypi
+#   distributions: "sdist bdist_wheel"
+#   user: mapboxci
