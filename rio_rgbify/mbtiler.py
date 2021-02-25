@@ -373,6 +373,7 @@ class RGBTiler:
             constrained_bbox = list(mercantile.bounds(self.bounding_tile))
             tiles = _make_tiles(constrained_bbox, "epsg:4326", self.min_z, self.max_z)
 
+        tilesCount = 0
         for tile, contents in self.pool.imap_unordered(self.run_function, tiles):
             x, y, z = tile
 
@@ -386,6 +387,11 @@ class RGBTiler:
                 "VALUES (?, ?, ?, ?);",
                 (z, x, tiley, buffer(contents)),
             )
+            tilesCount = tilesCount + 1
+            # commit data every 1000 tiles (about 150 Mo)
+            # Otherwise, the file .mbtiles-wal becomes huge (same size as the final file). The result is the need to have twice the size of the final Mbtiles on the hard drive
+            if (tilesCount % 1000 == 0):
+                conn.commit()
 
         conn.commit()
 
