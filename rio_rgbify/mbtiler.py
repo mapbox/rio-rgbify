@@ -317,6 +317,8 @@ class RGBTiler:
 
         # create a connection to the mbtiles file
         conn = sqlite3.connect(self.outpath)
+        # Wall mode : Speedup by 10 the speed of writing in the database
+        conn.execute('pragma journal_mode=wal')
         cur = conn.cursor()
 
         # create the tiles table
@@ -325,6 +327,11 @@ class RGBTiler:
             "(zoom_level integer, tile_column integer, "
             "tile_row integer, tile_data blob);"
         )
+
+        # create index on tiles for efficient access to this table
+        cur.execute(
+            "CREATE UNIQUE  INDEX IF NOT EXISTS tile_index on tiles (zoom_level, tile_column, tile_row);")
+
         # create empty metadata
         cur.execute("CREATE TABLE metadata (name text, value text);")
 
