@@ -387,7 +387,7 @@ class RGBTiler:
                 (z, x, tiley, buffer(contents)),
             )
 
-            conn.commit()
+        conn.commit()
 
         conn.close()
 
