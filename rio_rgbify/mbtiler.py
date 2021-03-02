@@ -15,6 +15,7 @@ from io import BytesIO
 from PIL import Image
 
 from rasterio import transform
+from rasterio.crs import CRS
 from rasterio.warp import reproject, transform_bounds
 try:
     from rasterio.warp import RESAMPLING
@@ -129,9 +130,9 @@ def _tile_worker(tile):
     reproject(
         rasterio.band(src, 1), out,
         dst_transform=toaffine,
-        dst_crs="init='epsg:3857'",
+        dst_crs=CRS({'init': 'epsg:3857'}),
         resampling=RESAMPLING.bilinear)
-
+    out = np.clip(out, 0, 100000)
     out = data_to_rgb(out, global_args['base_val'], global_args['interval'])
 
     return tile, global_args['writer_func'](out, global_args['kwargs'].copy(), toaffine)
@@ -182,7 +183,7 @@ def _make_tiles(bbox, src_crs, minz, maxz):
         generator of [x, y, z] tiles that intersect
         the provided bounding box
     '''
-    w, s, e, n = transform_bounds(*[src_crs, 'epsg:4326'] + bbox, densify_pts=0)
+    w, s, e, n = transform_bounds(*[src_crs, CRS({'init': 'epsg:4326'})] + bbox, densify_pts=0)
 
     EPSILON = 1.0e-10
 
@@ -267,7 +268,7 @@ class RGBTiler:
                 'height': 512,
                 'width': 512,
                 'count': 3,
-                'crs': 'EPSG:3857'
+                'crs': CRS({'init': 'EPSG:3857'})
             },
             'base_val': base_val,
             'interval': interval,
