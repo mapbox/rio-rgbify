@@ -132,7 +132,7 @@ def _tile_worker(tile):
         dst_transform=toaffine,
         dst_crs=CRS({'init': 'epsg:3857'}),
         resampling=RESAMPLING.bilinear)
-    out = np.clip(out, 0, 100000)
+    out = np.clip(out, global_args['base_val'], (global_args['base_val'] + 256 ** 3) * global_args['interval'])
     out = data_to_rgb(out, global_args['base_val'], global_args['interval'])
 
     return tile, global_args['writer_func'](out, global_args['kwargs'].copy(), toaffine)
