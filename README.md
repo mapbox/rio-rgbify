@@ -33,6 +33,9 @@ Options:
                          on [DEFAULT=0]
   -i, --interval FLOAT   Describes the precision of the output, by
                          incrementing interval [DEFAULT=1]
+  -r, --round-digits     Less significants encoded bits to be set
+                         to 0. Round the values, but have better
+                         images compression [DEFAULT=0]
   --bidx INTEGER         Band to encode [DEFAULT=1]
   --max-z INTEGER        Maximum zoom to tile (.mbtiles output only)
   --bounding-tile TEXT   Bounding tile '[{x}, {y}, {z}]' to limit output tiles

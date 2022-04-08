@@ -14,7 +14,7 @@ from rio_rgbify.mbtiler import RGBTiler
 
 def _rgb_worker(data, window, ij, g_args):
     return data_to_rgb(
-        data[0][g_args["bidx"] - 1], g_args["base_val"], g_args["interval"]
+        data[0][g_args["bidx"] - 1], g_args["base_val"], g_args["interval"], g_args["round_digits"]
     )
 
 
@@ -34,6 +34,13 @@ def _rgb_worker(data, window, ij, g_args):
     type=float,
     default=1,
     help="Describes the precision of the output, by incrementing interval [DEFAULT=1]",
+)
+@click.option(
+    "--round-digits",
+    "-r",
+    type=int,
+    default=0,
+    help="Less significants encoded bits to be set to 0. Round the values, but have better images compression [DEFAULT=0]",
 )
 @click.option("--bidx", type=int, default=1, help="Band to encode [DEFAULT=1]")
 @click.option(
@@ -70,6 +77,7 @@ def rgbify(
     dst_path,
     base_val,
     interval,
+    round_digits,
     bidx,
     max_z,
     min_z,
@@ -89,7 +97,7 @@ def rgbify(
         for c in creation_options:
             meta[c] = creation_options[c]
 
-        gargs = {"interval": interval, "base_val": base_val, "bidx": bidx}
+        gargs = {"interval": interval, "base_val": base_val, "round_digits": round_digits, "bidx": bidx}
 
         with RioMucho(
             [src_path], dst_path, _rgb_worker, options=meta, global_args=gargs
@@ -119,6 +127,7 @@ def rgbify(
             dst_path,
             interval=interval,
             base_val=base_val,
+            round_digits=round_digits,
             format=format,
             bounding_tile=bounding_tile,
             max_z=max_z,

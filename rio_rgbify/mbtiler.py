@@ -103,7 +103,7 @@ def _encode_as_png(data, profile, dst_transform):
 def _tile_worker(tile):
     """
     For each tile, and given an open rasterio src, plus a`global_args` dictionary
-    with attributes of `base_val`, `interval`, and a `writer_func`,
+    with attributes of `base_val`, `interval`, `round_digits` and a `writer_func`,
     warp a continous single band raster to a 512 x 512 mercator tile,
     then encode this tile into RGB.
 
@@ -142,7 +142,7 @@ def _tile_worker(tile):
         resampling=Resampling.bilinear,
     )
 
-    out = data_to_rgb(out, global_args["base_val"], global_args["interval"])
+    out = data_to_rgb(out, global_args["base_val"], global_args["interval"], global_args["round_digits"])
 
     return tile, global_args["writer_func"](out, global_args["kwargs"].copy(), toaffine)
 
@@ -235,6 +235,9 @@ class RGBTiler:
     interval: float
         the interval at which to encode
         Default=1
+    round_digits: int
+        Erased less significant digits
+        Default=0
     format: str
         output tile image format (png or webp)
         Default=png
@@ -255,6 +258,7 @@ class RGBTiler:
         max_z,
         interval=1,
         base_val=0,
+        round_digits=0,
         bounding_tile=None,
         **kwargs
     ):
@@ -291,6 +295,7 @@ class RGBTiler:
             },
             "base_val": base_val,
             "interval": interval,
+            "round_digits": round_digits,
             "writer_func": writer_func,
         }
 

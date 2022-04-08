@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 
 
-def data_to_rgb(data, baseval, interval):
+def data_to_rgb(data, baseval, interval, round_digits=0):
     """
     Given an arbitrary (rows x cols) ndarray,
     encode the data into uint8 RGB from an arbitrary
@@ -17,6 +17,8 @@ def data_to_rgb(data, baseval, interval):
         will be treated as zero for this encoding
     interval: float
         the interval at which to encode
+    round_digits: int
+        erased less significant digits
 
     Returns
     --------
@@ -27,6 +29,8 @@ def data_to_rgb(data, baseval, interval):
     data = data.astype(np.float64)
     data -= baseval
     data /= interval
+
+    data = np.around(data / 2**round_digits) * 2**round_digits
 
     rows, cols = data.shape
 
