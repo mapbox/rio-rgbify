@@ -138,7 +138,7 @@ def _tile_worker(tile):
         rasterio.band(src, 1),
         out,
         dst_transform=toaffine,
-        dst_crs="epsg:3857",
+        dst_crs="EPSG:3857",
         resampling=Resampling.bilinear,
     )
 
@@ -192,7 +192,7 @@ def _make_tiles(bbox, src_crs, minz, maxz):
         generator of [x, y, z] tiles that intersect
         the provided bounding box
     """
-    w, s, e, n = transform_bounds(*[src_crs, "epsg:4326"] + bbox, densify_pts=0)
+    w, s, e, n = transform_bounds(*[src_crs, "EPSG:4326"] + bbox, densify_pts=0)
 
     EPSILON = 1.0e-10
 
@@ -369,7 +369,7 @@ class RGBTiler:
             tiles = _make_tiles(bbox, src_crs, self.min_z, self.max_z)
         else:
             constrained_bbox = list(mercantile.bounds(self.bounding_tile))
-            tiles = _make_tiles(constrained_bbox, "epsg:4326", self.min_z, self.max_z)
+            tiles = _make_tiles(constrained_bbox, "EPSG:4326", self.min_z, self.max_z)
 
         for tile, contents in self.pool.imap_unordered(self.run_function, tiles):
             x, y, z = tile
