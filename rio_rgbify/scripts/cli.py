@@ -67,6 +67,7 @@ def _rgb_worker(data, window, ij, g_args):
     default="png",
     help="Output tile format (.mbtiles output only)",
 )
+@click.option("--chinaoffset", is_flag=True, default=False, help="Use GCJ02 coordinates within China as bounding box")
 @click.option("--workers", "-j", type=int, default=4, help="Workers to run [DEFAULT=4]")
 @click.option("--verbose", "-v", is_flag=True, default=False)
 @click.pass_context
@@ -83,6 +84,7 @@ def rgbify(
     min_z,
     bounding_tile,
     format,
+    chinaoffset,
     workers,
     verbose,
     creation_options,
@@ -132,6 +134,7 @@ def rgbify(
             bounding_tile=bounding_tile,
             max_z=max_z,
             min_z=min_z,
+            chinaoffset=chinaoffset,
         ) as tiler:
             tiler.run(workers)
 
