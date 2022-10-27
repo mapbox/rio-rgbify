@@ -339,6 +339,9 @@ class RGBTiler:
 
         # create a connection to the mbtiles file
         conn = sqlite3.connect(self.outpath)
+
+        conn.execute('pragma journal_mode=wal')
+
         cur = conn.cursor()
 
         # create the tiles table
@@ -388,6 +391,7 @@ class RGBTiler:
             constrained_bbox = list(mercantile.bounds(self.bounding_tile))
             tiles = _make_tiles(constrained_bbox, "EPSG:4326", self.min_z, self.max_z, self.chinaoffset)
 
+        tiles_count = 0
         for tile, contents in self.pool.imap_unordered(self.run_function, tiles):
             x, y, z = tile
 
@@ -402,8 +406,11 @@ class RGBTiler:
                 (z, x, tiley, buffer(contents)),
             )
 
-            conn.commit()
+            tiles_count += 1
+            if (tiles_count % 1000 == 0):
+                conn.commit()
 
+        conn.commit()
         conn.close()
 
         self.pool.close()
