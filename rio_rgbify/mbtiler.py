@@ -407,7 +407,7 @@ class RGBTiler:
             )
 
             tiles_count += 1
-            if (tiles_count % 1000 == 0):
+            if (tiles_count % 100 == 0):
                 conn.commit()
 
         conn.commit()
