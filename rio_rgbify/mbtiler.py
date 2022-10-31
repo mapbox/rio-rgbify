@@ -339,9 +339,6 @@ class RGBTiler:
 
         # create a connection to the mbtiles file
         conn = sqlite3.connect(self.outpath)
-
-        conn.execute('pragma journal_mode=wal')
-
         cur = conn.cursor()
 
         # create the tiles table
