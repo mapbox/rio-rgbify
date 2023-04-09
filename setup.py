@@ -25,7 +25,7 @@ extra_reqs = {
 
 setup(name="rio-rgbify",
       version=version,
-      description=u"Encode arbitrary bit depth rasters in psuedo base-256 as RGB",
+      description=u"Encode arbitrary bit depth rasters in pseudo base-256 as RGB",
       long_description=long_description,
       classifiers=[],
       keywords="",
