@@ -41,9 +41,16 @@ def data_to_rgb(data, baseval, interval, round_digits=0):
 
     rgb = np.zeros((3, rows, cols), dtype=np.uint8)
 
-    rgb[2] = ((data / 256) - (data // 256)) * 256
-    rgb[1] = (((data // 256) / 256) - ((data // 256) // 256)) * 256
-    rgb[0] = ((((data // 256) // 256) / 256) - (((data // 256) // 256) // 256)) * 256
+    if data.min() >= 0:
+        udata = np.array(data, dtype=np.uint32)
+
+        rgb[0] = np.right_shift(udata, 16)
+        rgb[1] = np.right_shift(np.bitwise_and(udata, 0x00FF00), 8)
+        rgb[2] = np.bitwise_and(udata, 0x0000FF)
+    else:
+        rgb[2] = ((data / 256) - (data // 256)) * 256
+        rgb[1] = (((data // 256) / 256) - ((data // 256) // 256)) * 256
+        rgb[0] = ((((data // 256) // 256) / 256) - (((data // 256) // 256) // 256)) * 256
 
     return rgb
 
