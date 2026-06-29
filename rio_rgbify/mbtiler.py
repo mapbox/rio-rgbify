@@ -330,6 +330,9 @@ class RGBTiler:
             "(zoom_level integer, tile_column integer, "
             "tile_row integer, tile_data blob);"
         )
+        # create index 
+        CREATE UNIQUE INDEX idx_tiles_coords_unique ON tiles(zoom_level, tile_column, tile_row);
+        
         # create empty metadata
         cur.execute("CREATE TABLE metadata (name text, value text);")
 
