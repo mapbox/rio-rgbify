@@ -24,6 +24,7 @@ from rasterio.warp import reproject, transform_bounds
 from rasterio.enums import Resampling
 
 from rio_rgbify.encoders import data_to_rgb
+from rio_rgbify.coords import mercator_to_wgs, wgs_to_mercator, gcj_to_wgs
 
 buffer = bytes if sys.version_info > (3,) else buffer
 
@@ -130,6 +131,19 @@ def _tile_worker(tile):
         for c in i
     ]
 
+    if global_args["chinaoffset"]:
+        wgs_min = mercator_to_wgs(bounds[0], bounds[1])
+        wgs_max = mercator_to_wgs(bounds[2], bounds[3])
+        gcj_min = gcj_to_wgs(wgs_min[0], wgs_min[1])
+        gcj_max = gcj_to_wgs(wgs_max[0], wgs_max[1])
+        mercator_min = wgs_to_mercator(gcj_min[0], gcj_min[1])
+        mercator_max = wgs_to_mercator(gcj_max[0], gcj_max[1])
+        bounds = [
+            c
+            for i in (mercator_min, mercator_max)
+            for c in i
+        ]
+
     toaffine = transform.from_bounds(*bounds + [512, 512])
 
     out = np.empty((512, 512), dtype=src.meta["dtype"])
@@ -170,7 +184,7 @@ def _tile_range(min_tile, max_tile):
     return itertools.product(range(min_x, max_x + 1), range(min_y, max_y + 1))
 
 
-def _make_tiles(bbox, src_crs, minz, maxz):
+def _make_tiles(bbox, src_crs, minz, maxz, chinaoffset):
     """
     Given a bounding box, zoom range, and source crs,
     find all tiles that would intersect
@@ -260,6 +274,7 @@ class RGBTiler:
         base_val=0,
         round_digits=0,
         bounding_tile=None,
+        chinaoffset=False,
         **kwargs
     ):
         self.run_function = _tile_worker
@@ -268,6 +283,7 @@ class RGBTiler:
         self.min_z = min_z
         self.max_z = max_z
         self.bounding_tile = bounding_tile
+        self.chinaoffset = chinaoffset
 
         if not "format" in kwargs:
             writer_func = _encode_as_png
@@ -297,6 +313,7 @@ class RGBTiler:
             "interval": interval,
             "round_digits": round_digits,
             "writer_func": writer_func,
+            "chinaoffset": chinaoffset,
         }
 
     def __enter__(self):
@@ -366,11 +383,12 @@ class RGBTiler:
 
         # generator of tiles to make
         if self.bounding_tile is None:
-            tiles = _make_tiles(bbox, src_crs, self.min_z, self.max_z)
+            tiles = _make_tiles(bbox, src_crs, self.min_z, self.max_z, self.chinaoffset)
         else:
             constrained_bbox = list(mercantile.bounds(self.bounding_tile))
-            tiles = _make_tiles(constrained_bbox, "EPSG:4326", self.min_z, self.max_z)
+            tiles = _make_tiles(constrained_bbox, "EPSG:4326", self.min_z, self.max_z, self.chinaoffset)
 
+        tiles_count = 0
         for tile, contents in self.pool.imap_unordered(self.run_function, tiles):
             x, y, z = tile
 
@@ -385,8 +403,11 @@ class RGBTiler:
                 (z, x, tiley, buffer(contents)),
             )
 
-            conn.commit()
+            tiles_count += 1
+            if (tiles_count % 100 == 0):
+                conn.commit()
 
+        conn.commit()
         conn.close()
 
         self.pool.close()

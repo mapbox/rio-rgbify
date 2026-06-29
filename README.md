@@ -42,6 +42,7 @@ Options:
                          (.mbtiles output only)
   --min-z INTEGER        Minimum zoom to tile (.mbtiles output only)
   --format [png|webp]    Output tile format (.mbtiles output only)
+  --chinaoffset          Use GCJ02 coordinates within China as bounding box
   -j, --workers INTEGER  Workers to run [DEFAULT=4]
   -v, --verbose
   --co NAME=VALUE        Driver specific creation options.See the
