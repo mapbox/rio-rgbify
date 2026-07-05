@@ -12,7 +12,7 @@ import rasterio
 import numpy as np
 import sqlite3
 from multiprocessing import Pool
-from rasterio._io import virtual_file_to_buffer
+from rasterio.io import MemoryFile
 from riomucho.single_process_pool import MockTub
 
 from io import BytesIO
@@ -90,14 +90,12 @@ def _encode_as_png(data, profile, dst_transform):
     contents: bytearray
         png-encoded bytearray of the provided input data
     """
-    profile["affine"] = dst_transform
+    profile["transform"] = dst_transform
 
-    with rasterio.open("/vsimem/tileimg", "w", **profile) as dst:
-        dst.write(data)
-
-    contents = bytearray(virtual_file_to_buffer("/vsimem/tileimg"))
-
-    return contents
+    with MemoryFile() as memfile:
+        with memfile.open(**profile) as dst:
+            dst.write(data)
+        return bytearray(memfile.read())
 
 
 def _tile_worker(tile):
@@ -192,7 +190,7 @@ def _make_tiles(bbox, src_crs, minz, maxz):
         generator of [x, y, z] tiles that intersect
         the provided bounding box
     """
-    w, s, e, n = transform_bounds(*[src_crs, "EPSG:4326"] + bbox, densify_pts=0)
+    w, s, e, n = transform_bounds(src_crs, "EPSG:4326", *bbox)
 
     EPSILON = 1.0e-10
 

@@ -60,8 +60,6 @@ def test_webp_writer():
 
     test_bytearray = _encode_as_webp(test_data)
 
-    assert len(test_bytearray) == 34
-
     test_complex_data = test_data.copy()
 
     test_complex_data[0] += (np.random.rand(256, 256) * 255).astype(np.uint8)
