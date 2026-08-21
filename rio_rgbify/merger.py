@@ -283,22 +283,32 @@ class TerrainRGBMerger:
             if tile_data is not None:
                 resampled_data = self._resample_if_needed(tile_data, target_tile, target_transform, tile_size)
 
-                # height_adjustment is already applied in _decode_tile during extraction
+                # height_adjustment is already applied in _decode_tile, before
+                # masking, which is the only place it can go: mask_values are
+                # compared against raw decoded heights, so shifting first would
+                # stop them matching. Applying it again here doubled it.
                 if result is None:
                     result = resampled_data
                 else:
-                    # Only fill positions where result (higher-priority sources) has no data
-                    mask = np.isnan(result) & ~np.isnan(resampled_data)
+                    mask = ~np.isnan(resampled_data)
                     if np.any(mask):
                         result[mask] = resampled_data[mask]
+
+        # Nothing survived the merge, so there is no tile worth writing.
+        #
+        # This ran after the output_nodata substitution below, where it could
+        # never fire: by then every pixel holds a real value. It is unreachable
+        # from here too, because has_native_with_data above already returned for
+        # the only case that produces an all-NaN result -- but that guard asks a
+        # stricter question ("is any source native here?") than this one, so the
+        # two are not interchangeable and this belongs before the substitution
+        # rather than after it.
+        if self.sparse_tiles and result is not None and np.all(np.isnan(result)):
+            return None
 
         # Replace NaN values (original nodata) with the output_nodata value.
         if result is not None and self.output_nodata is not None:
             result[np.isnan(result)] = self.output_nodata
-
-        # Check if sparse tiles are enabled and the whole tile is NaN after applying output_nodata
-        if self.sparse_tiles and result is not None and np.all(np.isnan(result)):
-            return None
 
         return result
 

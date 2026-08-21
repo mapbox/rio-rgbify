@@ -79,15 +79,18 @@ def main() -> int:
         cfg = {
             "output_type": "mbtiles",
             "sources": [
-                {
-                    "path": str(JAXA_FIXTURE),
-                    "encoding": "mapbox",
-                    "mask_values": [-10000, 0, -1],
-                },
+                # Bottom first: GEBCO bathymetry underneath, JAXA land on top.
+                # Equivalent to the old JAXA-first listing under the inverted
+                # priority master carried, so the reference tiles still match.
                 {
                     "path": str(GEBCO_FIXTURE),
                     "encoding": "mapbox",
                     "mask_values": [-10000],
+                },
+                {
+                    "path": str(JAXA_FIXTURE),
+                    "encoding": "mapbox",
+                    "mask_values": [-10000, 0, -1],
                 },
             ],
             "output_path": out,

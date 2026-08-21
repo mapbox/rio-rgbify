@@ -160,25 +160,42 @@ class TestTerrainRGBMergerMergeTiles:
         assert result.shape == (TILE_SIZE, TILE_SIZE)
         assert np.allclose(result, 500.0, atol=1.0)
 
-    def test_second_source_fills_nan_from_first(self):
+    def test_a_masked_lower_source_lets_the_upper_through(self):
         merger = self._merger(num_sources=2)
-        # First source: all NaN (masked ocean)
+        # First source (bottom): all NaN (masked ocean)
         td1 = self._make_tile_data(0.0)
         td1.data[:] = np.nan
-        # Second source: land at 200 m
+        # Second source (top): land at 200 m
         td2 = self._make_tile_data(200.0)
         result = merger._merge_tiles([td1, td2], SAMPLE_TILE)
         assert result is not None
         assert np.allclose(result, 200.0, atol=1.0)
 
-    def test_first_source_takes_priority_over_second(self):
+    def test_last_source_takes_priority_over_first(self):
+        """Sources are listed bottom first, so the last one paints over the rest.
+
+        This is what the README describes ("the last input source will be the
+        base layer for tiles"), what merge_example.json assumes (bathymetry
+        first, terrain after it), and what the production configs rely on.
+        """
         merger = self._merger(num_sources=2)
         td1 = self._make_tile_data(300.0)
         td2 = self._make_tile_data(100.0)
         result = merger._merge_tiles([td1, td2], SAMPLE_TILE)
-        # Where td1 has real data it should win
+        # Where td2 has real data it should win
         assert result is not None
-        assert np.allclose(result, 300.0, atol=1.0)
+        assert np.allclose(result, 100.0, atol=1.0)
+
+    def test_a_masked_upper_source_lets_the_lower_through(self):
+        """The bathymetry case: terrain on top, masked over the ocean."""
+        merger = self._merger(num_sources=2)
+        td1 = self._make_tile_data(-500.0)  # bottom: bathymetry
+        td2 = self._make_tile_data(200.0)  # top: terrain, masked over water
+        td2.data[:, :32] = np.nan
+        result = merger._merge_tiles([td1, td2], SAMPLE_TILE)
+        assert result is not None
+        assert np.allclose(result[:, :32], -500.0, atol=1.0)
+        assert np.allclose(result[:, 32:], 200.0, atol=1.0)
 
     def test_output_nodata_fills_nan(self):
         merger = self._merger()
@@ -705,15 +722,18 @@ class TestLiveMerge:
         cfg_data = {
             "output_type": "mbtiles",
             "sources": [
-                {
-                    "path": str(_JAXA_FIXTURE),
-                    "encoding": "mapbox",
-                    "mask_values": [-10000, 0, -1],
-                },
+                # Bottom first: GEBCO bathymetry underneath, JAXA land on top.
+                # Equivalent to the old JAXA-first listing under the inverted
+                # priority master carried, so the reference tiles still match.
                 {
                     "path": str(_GEBCO_FIXTURE),
                     "encoding": "mapbox",
                     "mask_values": [-10000],
+                },
+                {
+                    "path": str(_JAXA_FIXTURE),
+                    "encoding": "mapbox",
+                    "mask_values": [-10000, 0, -1],
                 },
             ],
             "output_path": out,
